@@ -25,7 +25,7 @@ import {Notifier} from "./base/Notifier.sol";
 import {CalldataDecoder} from "./libraries/CalldataDecoder.sol";
 import {Permit2Forwarder} from "./base/Permit2Forwarder.sol";
 import {SlippageCheck} from "./libraries/SlippageCheck.sol";
-import {PositionInfoLibrary} from "./libraries/PositionInfoLibrary.sol";
+import {PositionInfoLibrary, PositionInfo} from "./libraries/PositionInfoLibrary.sol";
 import {NativeWrapper} from "./base/NativeWrapper.sol";
 import {IWETH9} from "./interfaces/external/IWETH9.sol";
 
