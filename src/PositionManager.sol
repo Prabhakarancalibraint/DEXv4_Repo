@@ -25,7 +25,7 @@ import {Notifier} from "./base/Notifier.sol";
 import {CalldataDecoder} from "./libraries/CalldataDecoder.sol";
 import {Permit2Forwarder} from "./base/Permit2Forwarder.sol";
 import {SlippageCheck} from "./libraries/SlippageCheck.sol";
-import {PositionInfo, PositionInfoLibrary} from "./libraries/PositionInfoLibrary.sol";
+import {PositionInfoLibrary} from "./libraries/PositionInfoLibrary.sol";
 import {NativeWrapper} from "./base/NativeWrapper.sol";
 import {IWETH9} from "./interfaces/external/IWETH9.sol";
 
@@ -58,20 +58,20 @@ import {PositionManagement} from "./libraries/PositionManagement.sol";
 //                         4444 444                               44 4444444444444     44444444
 //                         44  44444         44444444             44444444444444444444     44444
 //                        444 444444        4444  4444             444444444444444444444444444    44444444
-//                 4444   44  44444        44444444444             444444444444444444444444444444     44444
-//                     44444   4444        4444444444             444444444444444444444444444444444     44444
-//                 44444 44444 444         444444                4444444444444444444444444444444444       44444
-//                       4444 44         44                     4 44444444444444444444444444444444444   444 44444
-//                   44444444 444  44   4    4         444444  4 44444444444444444444444444444444444444   4444444
-//                        444444    44       44444444444       44444444444444 444444444444444444444444444      444444
+//                 4444   44  44444        44444444444             444444444444444444444444444444444     44444
+//                     44444   4444        4444444444             444444444444444444444444444444444444     44444
+//                 44444 44444 444         444444                4444444444444444444444444444444444444444       44444
+//                       4444 44         44                     4 44444444444444444444444444444444444444444444   444 44444
+//                   44444444 444  44   4    4         444444  4 44444444444444444444444444444444444444444444444   4444444
+//                        444444    44       44444444444       44444444444444 444444444444444444444444444444444      444444
 //                     444444 44   4444      44444       44     44444444444444444444444444 4444444444444      44444
-//                   44    444444   44   444444444 444        4444444444444444444444444444444444444444444   4444444
-//                       44  4444444444444    44  44  44       4444444444444444444444444444444444444444444       444444
-//                      44  44444444444444444444444444  4   44 4444444444444444444444444444444444444444444    4   444444
+//                   44    444444   44   444444444 444        4444444444444444444444444444444444444444444444   4444444
+//                       44  4444444444444    44  44  44       4444444444444444444444444444444444444444444444       444444
+//                      44  44444444444444444444444444  4   44 4444444444444444444444444444444444444444444444    4   444444
 //                     4    4444                     4    4 4444444444444444444444444444444444444444444444444444444
-//                          4444                          444444444444444444444444444444444444444444444444444444444444
-//                          4444                         444444444444444444444444444444444444444444444444444444444444444
-//                          44444  44                  444444444444444444444444444444444444444444444444444444444444444444
+//                          4444                          444444444444444444444444444444444444444444444444444444444444444
+//                          4444                         444444444444444444444444444444444444444444444444444444444444444444
+//                          44444  44                  444444444444444444444444444444444444444444444444444444444444444444444
 //                          44444444444               4444444444444444444444444444444444444444444444444444444444444444444
 //                           4444444444444           44444444444444444444444444444444444444444444444444444444444444444444
 //                           444444444444444         444444444444444444444444444444444444444444444444444444444444444444444
@@ -115,9 +115,9 @@ contract PositionManager is
     using SafeCast for int256;
     using CalldataDecoder for bytes;
     using SlippageCheck for BalanceDelta;
-    using PositionInfoLibrary for PositionInfo;
+    using PositionInfoLibrary for uint256;
     using LiquidityManagement for IPoolManager;
-    using PositionManagement for PositionInfo;
+    using PositionManagement for uint256;
 
     /// @inheritdoc IPositionManager
     /// @dev The ID of the next token that will be minted. Skips 0
@@ -125,7 +125,7 @@ contract PositionManager is
 
     IPositionDescriptor public immutable tokenDescriptor;
 
-    mapping(uint256 tokenId => PositionInfo info) public positionInfo;
+    mapping(uint256 tokenId => uint256 info) public positionInfo;
     mapping(bytes25 poolId => PoolKey poolKey) public poolKeys;
 
     constructor(
@@ -292,7 +292,7 @@ contract PositionManager is
         uint128 amount1Max,
         bytes memory hookData
     ) internal onlyIfApproved(msgSender(), tokenId) {
-        (PoolKey memory poolKey, PositionInfo memory info) = getPoolAndPositionInfo(tokenId);
+        (PoolKey memory poolKey, uint256 info) = getPoolAndPositionInfo(tokenId);
         (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) = LiquidityManagement.increaseLiquidity(
             poolManager,
             poolKey,
@@ -315,7 +315,7 @@ contract PositionManager is
         uint128 amount1Min,
         bytes memory hookData
     ) internal onlyIfApproved(msgSender(), tokenId) {
-        (PoolKey memory poolKey, PositionInfo memory info) = getPoolAndPositionInfo(tokenId);
+        (PoolKey memory poolKey, uint256 info) = getPoolAndPositionInfo(tokenId);
         (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) = LiquidityManagement.decreaseLiquidity(
             poolManager,
             poolKey,
@@ -349,12 +349,12 @@ contract PositionManager is
         _mint(owner, tokenId);
 
         // Initialize the position info
-        PositionInfo info = PositionInfoLibrary.initialize(poolKey, tickLower, tickUpper);
+        uint256 info = PositionInfoLibrary.initialize(poolKey, tickLower, tickUpper);
         positionInfo[tokenId] = info;
 
         // Store the poolKey if it is not already stored.
         // On UniswapV4, the minimum tick spacing is 1, which means that if the tick spacing is 0, the pool key has not been set.
-        bytes25 poolId = info.poolId();
+        bytes25 poolId = PositionInfoLibrary.poolId(info);
         if (poolKeys[poolId].tickSpacing == 0) {
             poolKeys[poolId] = poolKey;
         }
@@ -370,9 +370,9 @@ contract PositionManager is
         internal
         onlyIfApproved(msgSender(), tokenId)
     {
-        (PoolKey memory poolKey, PositionInfo info) = getPoolAndPositionInfo(tokenId);
+        (PoolKey memory poolKey, uint256 info) = getPoolAndPositionInfo(tokenId);
 
-        uint256 liquidity = uint256(_getLiquidity(tokenId, poolKey, info.tickLower(), info.tickUpper()));
+        uint256 liquidity = uint256(_getLiquidity(tokenId, poolKey, info.getTickLower(), info.getTickUpper()));
 
         // Clear the position info.
         positionInfo[tokenId] = PositionInfoLibrary.EMPTY_POSITION_INFO;
@@ -436,12 +436,14 @@ contract PositionManager is
         if (balance > 0) currency.transfer(to, balance);
     }
 
-    function getPoolAndPositionInfo(uint256 tokenId) public view returns (PoolKey memory poolKey, PositionInfo memory info) {
-        return PositionManagement.getPoolAndPositionInfo(positionInfo, poolKeys, tokenId);
+    function getPoolAndPositionInfo(uint256 tokenId) public view returns (PoolKey memory poolKey, uint256 info) {
+        info = positionInfo[tokenId];
+        poolKey = poolKeys[PositionInfoLibrary.poolId(info)];
+        return (poolKey, info);
     }
 
     function _modifyLiquidity(
-        PositionInfo info,
+        uint256 info,
         PoolKey memory poolKey,
         int256 liquidityChange,
         bytes32 salt,
@@ -450,8 +452,8 @@ contract PositionManager is
         (liquidityDelta, feesAccrued) = poolManager.modifyLiquidity(
             poolKey,
             IPoolManager.ModifyLiquidityParams({
-                tickLower: info.tickLower(),
-                tickUpper: info.tickUpper(),
+                tickLower: info.getTickLower(),
+                tickUpper: info.getTickUpper(),
                 liquidityDelta: liquidityChange,
                 salt: salt
             }),
@@ -492,8 +494,8 @@ contract PositionManager is
 
     /// @inheritdoc IPositionManager
     function getPositionLiquidity(uint256 tokenId) external view returns (uint128 liquidity) {
-        (PoolKey memory poolKey, PositionInfo info) = getPoolAndPositionInfo(tokenId);
-        liquidity = _getLiquidity(tokenId, poolKey, info.tickLower(), info.tickUpper());
+        (PoolKey memory poolKey, uint256 info) = getPoolAndPositionInfo(tokenId);
+        liquidity = _getLiquidity(tokenId, poolKey, info.getTickLower(), info.getTickUpper());
     }
 
     function _getLiquidity(uint256 tokenId, PoolKey memory poolKey, int24 tickLower, int24 tickUpper)

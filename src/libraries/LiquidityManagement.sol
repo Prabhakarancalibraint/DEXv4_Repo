@@ -5,16 +5,18 @@ import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {Position} from "@uniswap/v4-core/src/libraries/Position.sol";
-import {PositionInfo} from "../libraries/PositionInfoLibrary.sol";
+import {PositionInfo, PositionInfoLibrary} from "../libraries/PositionInfoLibrary.sol";
 
 library LiquidityManagement {
+    using PositionInfoLibrary for PositionInfo;
+    
     error SlippageCheckFailed(uint256 amount0, uint256 amount1);
     error InvalidLiquidity();
 
     function increaseLiquidity(
         IPoolManager poolManager,
         PoolKey memory poolKey,
-        PositionInfo memory info,
+        uint256 positionInfo,
         uint256 tokenId,
         uint256 liquidity,
         uint128 amount0Max,
@@ -26,9 +28,9 @@ library LiquidityManagement {
         (liquidityDelta, feesAccrued) = poolManager.modifyPosition(
             poolKey,
             IPoolManager.ModifyPositionParams({
-                tickLower: info.tickLower,
-                tickUpper: info.tickUpper,
-                liquidityDelta: liquidity.toInt256()
+                tickLower: PositionInfoLibrary.tickLower(positionInfo),
+                tickUpper: PositionInfoLibrary.tickUpper(positionInfo),
+                liquidityDelta: int256(liquidity)
             }),
             hookData
         );
@@ -47,7 +49,7 @@ library LiquidityManagement {
     function decreaseLiquidity(
         IPoolManager poolManager,
         PoolKey memory poolKey,
-        PositionInfo memory info,
+        uint256 positionInfo,
         uint256 tokenId,
         uint256 liquidity,
         uint128 amount0Min,
@@ -59,9 +61,9 @@ library LiquidityManagement {
         (liquidityDelta, feesAccrued) = poolManager.modifyPosition(
             poolKey,
             IPoolManager.ModifyPositionParams({
-                tickLower: info.tickLower,
-                tickUpper: info.tickUpper,
-                liquidityDelta: -(liquidity.toInt256())
+                tickLower: PositionInfoLibrary.tickLower(positionInfo),
+                tickUpper: PositionInfoLibrary.tickUpper(positionInfo),
+                liquidityDelta: -(int256(liquidity))
             }),
             hookData
         );
