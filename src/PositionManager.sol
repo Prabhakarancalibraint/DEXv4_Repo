@@ -292,7 +292,7 @@ contract PositionManager is
         uint128 amount1Max,
         bytes memory hookData
     ) internal onlyIfApproved(msgSender(), tokenId) {
-        (PoolKey memory poolKey, uint256 info) = getPoolAndPositionInfo(tokenId);
+        (PoolKey memory poolKey, PositionInfo info) = getPoolAndPositionInfo(tokenId);
         (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) = LiquidityManagement.increaseLiquidity(
             poolManager,
             poolKey,
@@ -315,7 +315,7 @@ contract PositionManager is
         uint128 amount1Min,
         bytes memory hookData
     ) internal onlyIfApproved(msgSender(), tokenId) {
-        (PoolKey memory poolKey, uint256 info) = getPoolAndPositionInfo(tokenId);
+        (PoolKey memory poolKey, PositionInfo info) = getPoolAndPositionInfo(tokenId);
         (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) = LiquidityManagement.decreaseLiquidity(
             poolManager,
             poolKey,
@@ -349,12 +349,12 @@ contract PositionManager is
         _mint(owner, tokenId);
 
         // Initialize the position info
-        uint256 info = PositionInfoLibrary.initialize(poolKey, tickLower, tickUpper);
-        positionInfo[tokenId] = info;
+        PositionInfo info = PositionInfo.initialize(poolKey, tickLower, tickUpper);
+        positionInfo[tokenId] = info.unwrap();
 
         // Store the poolKey if it is not already stored.
         // On UniswapV4, the minimum tick spacing is 1, which means that if the tick spacing is 0, the pool key has not been set.
-        bytes25 poolId = PositionInfoLibrary.poolId(info);
+        bytes25 poolId = info.poolId();
         if (poolKeys[poolId].tickSpacing == 0) {
             poolKeys[poolId] = poolKey;
         }
@@ -370,9 +370,9 @@ contract PositionManager is
         internal
         onlyIfApproved(msgSender(), tokenId)
     {
-        (PoolKey memory poolKey, uint256 info) = getPoolAndPositionInfo(tokenId);
+        (PoolKey memory poolKey, PositionInfo info) = getPoolAndPositionInfo(tokenId);
 
-        uint256 liquidity = uint256(_getLiquidity(tokenId, poolKey, info.getTickLower(), info.getTickUpper()));
+        uint256 liquidity = uint256(_getLiquidity(tokenId, poolKey, info.tickLower(), info.tickUpper()));
 
         // Clear the position info.
         positionInfo[tokenId] = PositionInfoLibrary.EMPTY_POSITION_INFO;
@@ -436,14 +436,15 @@ contract PositionManager is
         if (balance > 0) currency.transfer(to, balance);
     }
 
-    function getPoolAndPositionInfo(uint256 tokenId) public view returns (PoolKey memory poolKey, uint256 info) {
-        info = positionInfo[tokenId];
+    function getPoolAndPositionInfo(uint256 tokenId) public view returns (PoolKey memory poolKey, PositionInfo info) {
+        uint256 rawInfo = positionInfo[tokenId];
+        info = PositionInfo.wrap(rawInfo);
         poolKey = poolKeys[PositionInfoLibrary.poolId(info)];
         return (poolKey, info);
     }
 
     function _modifyLiquidity(
-        uint256 info,
+        PositionInfo info,
         PoolKey memory poolKey,
         int256 liquidityChange,
         bytes32 salt,
@@ -452,8 +453,8 @@ contract PositionManager is
         (liquidityDelta, feesAccrued) = poolManager.modifyLiquidity(
             poolKey,
             IPoolManager.ModifyLiquidityParams({
-                tickLower: info.getTickLower(),
-                tickUpper: info.getTickUpper(),
+                tickLower: info.tickLower(),
+                tickUpper: info.tickUpper(),
                 liquidityDelta: liquidityChange,
                 salt: salt
             }),
@@ -494,8 +495,8 @@ contract PositionManager is
 
     /// @inheritdoc IPositionManager
     function getPositionLiquidity(uint256 tokenId) external view returns (uint128 liquidity) {
-        (PoolKey memory poolKey, uint256 info) = getPoolAndPositionInfo(tokenId);
-        liquidity = _getLiquidity(tokenId, poolKey, info.getTickLower(), info.getTickUpper());
+        (PoolKey memory poolKey, PositionInfo info) = getPoolAndPositionInfo(tokenId);
+        liquidity = _getLiquidity(tokenId, poolKey, info.tickLower(), info.tickUpper());
     }
 
     function _getLiquidity(uint256 tokenId, PoolKey memory poolKey, int24 tickLower, int24 tickUpper)

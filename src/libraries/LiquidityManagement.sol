@@ -16,7 +16,7 @@ library LiquidityManagement {
     function increaseLiquidity(
         IPoolManager poolManager,
         PoolKey memory poolKey,
-        uint256 positionInfo,
+        PositionInfo info,
         uint256 tokenId,
         uint256 liquidity,
         uint128 amount0Max,
@@ -28,8 +28,8 @@ library LiquidityManagement {
         (liquidityDelta, feesAccrued) = poolManager.modifyPosition(
             poolKey,
             IPoolManager.ModifyPositionParams({
-                tickLower: PositionInfoLibrary.tickLower(positionInfo),
-                tickUpper: PositionInfoLibrary.tickUpper(positionInfo),
+                tickLower: info.tickLower(),
+                tickUpper: info.tickUpper(),
                 liquidityDelta: int256(liquidity)
             }),
             hookData
@@ -49,7 +49,7 @@ library LiquidityManagement {
     function decreaseLiquidity(
         IPoolManager poolManager,
         PoolKey memory poolKey,
-        uint256 positionInfo,
+        PositionInfo info,
         uint256 tokenId,
         uint256 liquidity,
         uint128 amount0Min,
@@ -61,8 +61,8 @@ library LiquidityManagement {
         (liquidityDelta, feesAccrued) = poolManager.modifyPosition(
             poolKey,
             IPoolManager.ModifyPositionParams({
-                tickLower: PositionInfoLibrary.tickLower(positionInfo),
-                tickUpper: PositionInfoLibrary.tickUpper(positionInfo),
+                tickLower: info.tickLower(),
+                tickUpper: info.tickUpper(),
                 liquidityDelta: -(int256(liquidity))
             }),
             hookData
