@@ -29,6 +29,9 @@ import {PositionInfo, PositionInfoLibrary} from "./libraries/PositionInfoLibrary
 import {NativeWrapper} from "./base/NativeWrapper.sol";
 import {IWETH9} from "./interfaces/external/IWETH9.sol";
 
+import {LiquidityManagement} from "./libraries/LiquidityManagement.sol";
+import {PositionManagement} from "./libraries/PositionManagement.sol";
+
 //                                           444444444
 //                                444444444444      444444
 //                              444              44     4444
@@ -54,44 +57,43 @@ import {IWETH9} from "./interfaces/external/IWETH9.sol";
 //                          444                               4   44444444444444   444444444
 //                         4444 444                               44 4444444444444     44444444
 //                         44  44444         44444444             44444444444444444444     44444
-//                        444 444444        4444  4444             444444444444444444     44  4444
-//                 4444   44  44444        44444444444             444444444444444444444    44444444
-//                     44444   4444        4444444444             444444444444444444444444     44444
-//                 44444 44444 444         444444                4444444444444444444444444       44444
-//                       4444 44         44                     4 44444444444444444444444444   444 44444
-//                   44444444 444  44   4    4         444444  4 44444444444444444444444444444   4444444
-//                        444444    44       44444444444       44444444444444 444444444444444      444444
-//                     444444 44   4444      44444       44     44444444444444444444444 4444444      44444
-//                   44    444444   44   444444444 444        4444444444444444444444444444444444   4444444
-//                       44  4444444444444    44  44  44       4444444444444444444444444444444       444444
-//                      44  44444444444444444444444444  4   44 4444444444444444444444444444444    4   444444
-//                     4    4444                     4    4 4444444444444444444444444              44 4444444
-//                          4444                          4444444444444444444444444    4   4444     44444444
-//                          4444                         444444444444444444444444  44444     44444 4444444444
-//                          44444  44                  444444444444444444444444444444444444444444444444444444
-//                          44444444444               4444444444444444444444444444444444444444444444444444444
-//                           4444444444444           44444444444444444444444444444444444444444444444444444444
-//                           444444444444444         444444444444444444444444444444444444444444444444444444444
-//                            44444444444444444     4444444444444444444444444444444444444444444444444444444444
-//                            44444444444444444     44444444444444444444444444444444444444444444444444444444
-//                            44444444444444444444  444444444444444444444444444444444444444444444444444444444
-//                            444444444444444444444 444444444444444444444444444444444444444444444444444444444
-//                              444444444444444444444 4444444444444444444444444444444444444444444444444444444
-//                              44444444444444444444444444444444444444444444444444444444444444444444444444444
-//                               444444444444444444444444444444444444444444444444444444444444444444444444444
-//                                44444444444444444444444444444444444444444444444444444444444444444444444444
-//                               44444444444444444444444444444444444444444444444444      444444444444444444
-//                             444444444444444444444444444444444444444444444444       44444444444444444444
-//                           444   444   444   44  444444444444444444444 4444      444444444444444444444
-//                           444  444    44    44  44444444 4444444444444       44444444444444444444444
-//                            444 444   4444   4444 4444444444444444         44444444444444444444444444
-//                      4444444444444444444444444444444444444444        44444444444444444444444444444
-//                       444        4444444444444444444444444       44444444444444444444444444444444
-//                          4444444       444444444444         4444444444444444444444444444444444
-//                             4444444444                 44444444444444444444444444444444444
-//                                444444444444444444444444444444444444444444444444444444
-//                                     44444444444444444444444444444444444444444
-//                                              4444444444444444444
+//                        444 444444        4444  4444             444444444444444444444444    44444444
+//                 4444   44  44444        44444444444             444444444444444444444444444     44444
+//                     44444   4444        4444444444             444444444444444444444444444444     44444
+//                 44444 44444 444         444444                4444444444444444444444444444444       44444
+//                       4444 44         44                     4 44444444444444444444444444444444   444 44444
+//                   44444444 444  44   4    4         444444  4 44444444444444444444444444444444444   4444444
+//                        444444    44       44444444444       44444444444444 444444444444444444444444      444444
+//                     444444 44   4444      44444       44     44444444444444444444444444 4444444444444      44444
+//                   44    444444   44   444444444 444        4444444444444444444444444444444444444444444   4444444
+//                       44  4444444444444    44  44  44       4444444444444444444444444444444444444444444       444444
+//                      44  44444444444444444444444444  4   44 4444444444444444444444444444444444444444444    4   444444
+//                     4    4444                     4    4 4444444444444444444444444444444444444444444444444444444
+//                          4444                          444444444444444444444444444444444444444444444444444444444444
+//                          4444                         444444444444444444444444444444444444444444444444444444444444444
+//                          44444  44                  444444444444444444444444444444444444444444444444444444444444444444
+//                          44444444444               4444444444444444444444444444444444444444444444444444444444444444444
+//                           4444444444444           44444444444444444444444444444444444444444444444444444444444444444444
+//                           444444444444444         444444444444444444444444444444444444444444444444444444444444444444444
+//                            44444444444444444     4444444444444444444444444444444444444444444444444444444444444444444444
+//                            44444444444444444     4444444444444444444444444444444444444444444444444444444444444444444444
+//                            44444444444444444444  444444444444444444444444444444444444444444444444444444444444444444444444
+//                            444444444444444444444 444444444444444444444444444444444444444444444444444444444444444444444444
+//                              444444444444444444444 4444444444444444444444444444444444444444444444444444444444444444444444
+//                              44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+//                               444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+//                                44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+//                               44444444444444444444444444444444444444444444444444      444444444444444444444444444444444
+//                             444444444444444444444444444444444444444444444444       44444444444444444444444444444444444
+//                           444   444   444   44  444444444444444444444 4444      444444444444444444444444444444444444
+//                           444  444    44    44  44444444 4444444444444       444444444444444444444444444444444444444
+//                            444 444   4444   4444 4444444444444444         444444444444444444444444444444444444444444
+//                      4444444444444444444444444444444444444444        444444444444444444444444444444444444444444444444
+//                       444        4444444444444444444444444       444444444444444444444444444444444444444444444444444
+//                          4444444       444444444444         444444444444444444444444444444444444444444444444444444444
+//                             4444444444                 444444444444444444444444444444444444444444444444444444444444
+//                                444444444444444444444444444444444444444444444444444444444444444444444444444444444444444
+//                                     444444444444444444444444444444444444444444444444444444444444444444444444444444444
 
 /// @notice The PositionManager (PosM) contract is responsible for creating liquidity positions on v4.
 /// PosM mints and manages ERC721 tokens associated with each position.
@@ -115,6 +117,8 @@ contract PositionManager is
     using CalldataDecoder for bytes;
     using SlippageCheck for BalanceDelta;
     using PositionInfoLibrary for PositionInfo;
+    using LiquidityManagement for IPoolManager;
+    using PositionManagement for PositionInfo;
 
     /// @inheritdoc IPositionManager
     /// @dev The ID of the next token that will be minted. Skips 0
@@ -272,15 +276,21 @@ contract PositionManager is
         uint256 liquidity,
         uint128 amount0Max,
         uint128 amount1Max,
-        bytes calldata hookData
+        bytes memory hookData
     ) internal onlyIfApproved(msgSender(), tokenId) {
-        (PoolKey memory poolKey, PositionInfo info) = getPoolAndPositionInfo(tokenId);
-
-        // Note: The tokenId is used as the salt for this position, so every minted position has unique storage in the pool manager.
-        (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) =
-            _modifyLiquidity(info, poolKey, liquidity.toInt256(), bytes32(tokenId), hookData);
-        // Slippage checks should be done on the principal liquidityDelta which is the liquidityDelta - feesAccrued
-        (liquidityDelta - feesAccrued).validateMaxIn(amount0Max, amount1Max);
+        (PoolKey memory poolKey, PositionInfo memory info) = getPoolAndPositionInfo(tokenId);
+        (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) = LiquidityManagement.increaseLiquidity(
+            poolManager,
+            poolKey,
+            info,
+            tokenId,
+            liquidity,
+            amount0Max,
+            amount1Max,
+            hookData
+        );
+        _handleBalanceDelta(poolKey, liquidityDelta);
+        _handleBalanceDelta(poolKey, feesAccrued);
     }
 
     /// @dev Calling decrease with 0 liquidity will credit the caller with any underlying fees of the position
@@ -289,15 +299,21 @@ contract PositionManager is
         uint256 liquidity,
         uint128 amount0Min,
         uint128 amount1Min,
-        bytes calldata hookData
+        bytes memory hookData
     ) internal onlyIfApproved(msgSender(), tokenId) {
-        (PoolKey memory poolKey, PositionInfo info) = getPoolAndPositionInfo(tokenId);
-
-        // Note: the tokenId is used as the salt.
-        (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) =
-            _modifyLiquidity(info, poolKey, -(liquidity.toInt256()), bytes32(tokenId), hookData);
-        // Slippage checks should be done on the principal liquidityDelta which is the liquidityDelta - feesAccrued
-        (liquidityDelta - feesAccrued).validateMinOut(amount0Min, amount1Min);
+        (PoolKey memory poolKey, PositionInfo memory info) = getPoolAndPositionInfo(tokenId);
+        (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) = LiquidityManagement.decreaseLiquidity(
+            poolManager,
+            poolKey,
+            info,
+            tokenId,
+            liquidity,
+            amount0Min,
+            amount1Min,
+            hookData
+        );
+        _handleBalanceDelta(poolKey, liquidityDelta);
+        _handleBalanceDelta(poolKey, feesAccrued);
     }
 
     function _mint(
@@ -406,6 +422,10 @@ contract PositionManager is
         if (balance > 0) currency.transfer(to, balance);
     }
 
+    function getPoolAndPositionInfo(uint256 tokenId) public view returns (PoolKey memory poolKey, PositionInfo memory info) {
+        return PositionManagement.getPoolAndPositionInfo(positionInfo, poolKeys, tokenId);
+    }
+
     function _modifyLiquidity(
         PositionInfo info,
         PoolKey memory poolKey,
@@ -454,12 +474,6 @@ contract PositionManager is
     function transferFrom(address from, address to, uint256 id) public virtual override onlyIfPoolManagerLocked {
         super.transferFrom(from, to, id);
         if (positionInfo[id].hasSubscriber()) _notifyTransfer(id, from, to);
-    }
-
-    /// @inheritdoc IPositionManager
-    function getPoolAndPositionInfo(uint256 tokenId) public view returns (PoolKey memory poolKey, PositionInfo info) {
-        info = positionInfo[tokenId];
-        poolKey = poolKeys[info.poolId()];
     }
 
     /// @inheritdoc IPositionManager
